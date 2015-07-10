@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.apache.cordova.plugin.ParseInstallation"
+    version="0.1.0">
+
+    <name>ngCordovaParse</name>
+    <description>
+        This plugin will Parse installation
+    </description>
+    <license>MIT</license>
+
+    <engines>
+        <!--
+            Cordova 2.8.0 is all I have tested on - it should work fine with earlier versions.
+            Please modify the below line, test, and submit a PR if it works for you.
+        -->
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <js-module src="www/ngCordovaParse.js">
+       <clobbers target="ngCordovaParse" />
+    </js-module>
+
+    <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="ngCordovaParse">
+                <param name="android-package" value="org.apache.cordova.plugin.ParseInstallation"/>
+            </feature>
+        </config-file>
+        <source-file src="src/android/ParseInstallation.java" target-dir="org/apache/cordova/plugin/ParseInstallation" />
+    </platform>
+
+    <!-- ios -->
+    <platform name="ios">
+        <plugins-plist key="ngCordovaParse" string="ngCordovaParse" />
+
+        <config-file target="config.xml" parent="/*">
+            <feature name="ngCordovaParse">
+                <param name="ios-package" value="ngCordovaParse" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/ParseInstallation.h" />
+        <source-file src="src/ios/ParseInstallation.m" />
+    </platform>
+</plugin>
