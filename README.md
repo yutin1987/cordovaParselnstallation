@@ -10,7 +10,7 @@ Step1. install [pushNotifications](http://ngcordova.com/docs/plugins/pushNotific
 
 Step2. install ngCordovaParse:
 
-    cordova plugin add https://github.com/yutin1987/ngCordovaParse.git
+    cordova plugin add https://github.com/yutin1987/cordovaParselnstallation.git
 
 ### Manually in iOS
 
@@ -22,28 +22,25 @@ TODO: Write these instructions
 
 ### Sample Code
 
-angular
-.module('starter', ['ngCordova', 'ngCordovaParse'])
-.run(function(
-  $cordovaParse
-) {
-  $cordovaParse
+```
+$ionicPlatform.ready(function() {
+  ParseInstallation
     .initialize(
       'Application ID',
       'JavaScript Key',
       {
         android: {'senderID': 'XXXXXXXXXXXX'},
-        ios: {}
+        ios: {},
+        onNotification: function(notification) {
+          $rootScope.$broadcast('notificationReceived', notification);
+        }
       }
     )
-    .then(function(installation){
+    .then(function(installation) {
       alert('New object created with objectId: ' + installation.id);
     });
-
-  $rootScope.$on('$cordovaPush:notificationReceived', function(event, notification) {
-    alert(JSON.stringify(notification));
-  });
 });
+```
 
 ### License
 

@@ -18,31 +18,51 @@
         <engine name="cordova" version=">=3.0.0" />
     </engines>
 
-    <js-module src="www/ngCordovaParse.js">
-       <clobbers target="ngCordovaParse" />
+    <js-module src="www/parse-1.4.2.min.js" name="Parse">
+       <runs />
+    </js-module>
+
+    <js-module src="www/ParseInstallation.js" name="ParseInstallation">
+       <clobbers target="ParseInstallation" />
     </js-module>
 
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="ngCordovaParse">
+            <feature name="ParseInstallation">
                 <param name="android-package" value="org.apache.cordova.plugin.ParseInstallation"/>
             </feature>
         </config-file>
-        <source-file src="src/android/ParseInstallation.java" target-dir="org/apache/cordova/plugin/ParseInstallation" />
+        <source-file src="src/android/ParseInstallation.java" target-dir="src/org/apache/cordova/plugin/ParseInstallation" />
     </platform>
 
     <!-- ios -->
     <platform name="ios">
-        <plugins-plist key="ngCordovaParse" string="ngCordovaParse" />
+        <plugins-plist key="ParseInstallation" string="ParseInstallation" />
 
         <config-file target="config.xml" parent="/*">
-            <feature name="ngCordovaParse">
-                <param name="ios-package" value="ngCordovaParse" />
+            <feature name="ParseInstallation">
+                <param name="ios-package" value="ParseInstallation" />
             </feature>
         </config-file>
 
         <header-file src="src/ios/ParseInstallation.h" />
         <source-file src="src/ios/ParseInstallation.m" />
+    </platform>
+
+    <!-- browser -->
+    <platform name="browser">
+        <config-file target="config.xml" parent="/*">
+            <feature name="ParseInstallation">
+                <param name="browser-package" value="ParseInstallation" />
+            </feature>
+        </config-file>
+
+        <js-module src="src/browser/ParseInstallation.js" name="ParseInstallation">
+            <runs />
+        </js-module>
+        <js-module src="www/parse-1.4.2.min.js" name="Parse">
+            <runs />
+        </js-module>
     </platform>
 </plugin>
