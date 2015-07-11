@@ -59,12 +59,13 @@ module.exports = (function() {
   // uuid v4
   function uuid() {
     var rnds = _rng();
+    var bth = _byteToHex;
+    var i = 0;
 
     // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
     rnds[6] = (rnds[6] & 0x0f) | 0x40;
     rnds[8] = (rnds[8] & 0x3f) | 0x80;
 
-    bth = _byteToHex;
     return  bth[rnds[i++]] + bth[rnds[i++]] +
             bth[rnds[i++]] + bth[rnds[i++]] + '-' +
             bth[rnds[i++]] + bth[rnds[i++]] + '-' +
@@ -93,9 +94,32 @@ module.exports = (function() {
     return console.error('AppVersion either needs a success callback, or jQuery/AngularJS defined for using promises');
   }
 
+  function getAppName() {
+    var q = deferred();
+    exec(q.resolve, q.reject, 'ParseInstallation', 'getAppName', []);
+    return toReturn(q);
+  }
+  
+  function getPackageName() {
+    var q = deferred();
+    exec(q.resolve, q.reject, 'ParseInstallation', 'getPackageName', []);
+    return toReturn(q);
+  }
+
+  function getVersionNumber() {
+    var q = deferred();
+    exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionNumber', []);
+    return toReturn(q);
+  }
+
+  function getVersionCode() {
+    var q = deferred();
+    exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionCode', []);
+    return toReturn(q);
+  }
+
   function saveInstallation(token) {
     var q = deferred();
-
     var Installation = Parse.Object.extend("_Installation");
     var installation = new Installation();
 
@@ -110,22 +134,44 @@ module.exports = (function() {
       window.localStorage.setItem('parseInstallationId', installationId);
     }
 
-    installation.set("deviceType", platform);
+    installation.set('deviceType', platform);
     if (platform === 'android') {
-      installation.set("pushType", 'gcm');
+      installation.set('pushType', 'gcm');
     }
-    installation.set("installationId", installationId);
-    installation.set("deviceToken", token);
-    installation.save(null, {
-      success: function(installation) {
-        q.resolve(installation);
-      },
-      error: function(installation, error) {
-        q.reject(error);
-      }
+    installation.set('installationId', installationId);
+    installation.set('deviceToken', token);
+    // installation.set('parseVersion', token);
+    // installation.set('timeZone', token);
+
+    // getVersionCode().then(function(packageName) {
+    // });
+
+    setTimeout(function() {
+      q.resolve(installation);
     });
 
-    return toReturn(q);
+    return toReturn(q)
+      .then(function(installation) {
+        return getVersionNumber()
+          .then(function(versionNumber) {
+            return installation.set('appVersion', versionNumber);
+          });
+      })
+      .then(function(installation) {
+        return getAppName()
+          .then(function(appName) {
+            return installation.set('appName', appName);
+          });
+      })
+      .then(function(installation) {
+        return getPackageName()
+          .then(function(packageName) {
+            return installation.set('appIdentifier', packageName);
+          });
+      })
+      .then(function(installation) {
+        return installation.save();
+      });
   }
 
   var pushToken;
@@ -147,7 +193,6 @@ module.exports = (function() {
       });
     },
     initialize: function (appId, appKey, config) {
-      var q = deferred();
 
       Parse.initialize(appId, appKey);
 
@@ -168,6 +213,8 @@ module.exports = (function() {
         config.ecb = 'ParseInstallation.listenNotification';
       }
 
+      var q = deferred();
+
       window.plugins.pushNotification.register(function (token) {
         if (token != 'OK') {
           pushToken = token;
@@ -184,30 +231,8 @@ module.exports = (function() {
           });
         };
         nextLoop();
-      }, function (error) {
-        q.reject(error);
-      }, config);
+      }, q.reject, config);
 
-      return toReturn(q);
-    },
-    getAppName: function() {
-      var q = deferred();
-      exec(q.resolve, q.reject, 'ParseInstallation', 'getAppName', []);
-      return toReturn(q);
-    },
-    getPackageName: function() {
-      var q = deferred();
-      exec(q.resolve, q.reject, 'ParseInstallation', 'getPackageName', []);
-      return toReturn(q);
-    },
-    getVersionNumber: function() {
-      var q = deferred();
-      exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionNumber', []);
-      return toReturn(q);
-    },
-    getVersionCode: function() {
-      var q = deferred();
-      exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionCode', []);
       return toReturn(q);
     }
   };

@@ -33,7 +33,7 @@
                 <param name="android-package" value="org.apache.cordova.plugin.ParseInstallation"/>
             </feature>
         </config-file>
-        <source-file src="src/android/ParseInstallation.java" target-dir="src/org/apache/cordova/plugin/ParseInstallation" />
+        <source-file src="src/android/ParseInstallation.java" target-dir="src/org/apache/cordova/plugin" />
     </platform>
 
     <!-- ios -->
