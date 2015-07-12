@@ -118,38 +118,61 @@ module.exports = (function() {
     return toReturn(q);
   }
 
-  function saveInstallation(token, config) {
+  function createInstallation() {
     var q = deferred();
+
     var Installation = Parse.Object.extend("_Installation");
     var installation = new Installation();
-
-    // platform
     var platform = device.platform.toLowerCase();
-
-    // installationId
     var installationId = window.localStorage.getItem('parseInstallationId');
-
     if (!installationId) {
       installationId = uuid();
-      window.localStorage.setItem('parseInstallationId', installationId);
     }
-
     installation.set('deviceType', platform);
-    if (platform === 'android') {
-      installation.set('pushType', 'gcm');
-      if (config.senderID !== 1076345567071) {
-        installation.set('GCMSenderId', config.senderID);
-      }
-    }
     installation.set('installationId', installationId);
-    installation.set('deviceToken', token);
-    installation.set('parseVersion', Parse.VERSION);
+    installation.save().then(q.resolve, q.reject);
+    window.localStorage.setItem('parseInstallationId', installationId);
 
-    setTimeout(function() {
-      q.resolve(installation);
+    console.log('create: ' + installationId);
+    return toReturn(q);
+  }
+
+  function getCurrentInstallation() {
+    var q = deferred();
+
+    var Installation = Parse.Object.extend("_Installation");
+    var installationObjectId = window.localStorage.getItem('parseInstallationObjectId');
+
+    if (!installationObjectId) {
+      createInstallation().then(q.resolve, q.reject);
+    } else {
+      console.log('get: ' + installationObjectId);
+      var query = new Parse.Query(Installation);
+      query.get(installationObjectId).then(q.resolve, function(e) {
+        console.log('get installation error: ' + JSON.stringify(e));
+        createInstallation().then(q.resolve, q.reject);
+      });
+    }
+
+    return toReturn(q).then(function(installation) {
+      window.localStorage.setItem('parseInstallationObjectId', installation.id);
+      return installation;
     });
+  }
 
-    return toReturn(q)
+  function saveInstallation(token, config) {
+    return getCurrentInstallation()
+      .then(function(installation) {
+        if (device.platform.toLowerCase() === 'android') {
+          installation.set('pushType', 'gcm');
+          if (config.senderID !== 1076345567071) {
+            installation.set('GCMSenderId', config.senderID);
+          }
+        }
+        installation.set('deviceToken', token);
+        installation.set('parseVersion', Parse.VERSION);
+        return installation;
+      })
       .then(function(installation) {
         return getVersionNumber()
           .then(function(versionNumber) {
