@@ -94,6 +94,9 @@ module.exports = (function() {
     return console.error('AppVersion either needs a success callback, or jQuery/AngularJS defined for using promises');
   }
 
+  var subscriptions = window.localStorage.getItem('subscriptions') || '[]';
+  subscriptions = JSON.parse(subscriptions);
+
   function getAppName() {
     var q = deferred();
     exec(q.resolve, q.reject, 'ParseInstallation', 'getAppName', []);
@@ -171,6 +174,7 @@ module.exports = (function() {
         }
         installation.set('deviceToken', token);
         installation.set('parseVersion', Parse.VERSION);
+        installation.set('channels', subscriptions);
         return installation;
       })
       .then(function(installation) {
@@ -274,16 +278,9 @@ module.exports = (function() {
     getSubscriptions: function() {
       var q = deferred();
 
-      var nextLoop = function() {
-        setTimeout(function () {
-          if (installation) {
-            installation.get('channels').then(q.resolve, q.reject);
-          } else {
-            nextLoop();
-          }
-        });
-      };
-      nextLoop();
+      setTimeout(function() {
+        q.resolve(subscriptions);
+      });
 
       return toReturn(q);
     },
@@ -298,9 +295,17 @@ module.exports = (function() {
         setTimeout(function () {
           if (installation) {
             channels.forEach(function(item) {
+              for(var i in subscriptions) {
+                if (subscriptions[i] === item) {
+                  return;
+                }
+              }
+              
+              subscriptions.push(item);
               installation.addUnique("channels", item);
             });
 
+            window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
             installation.save().then(q.resolve, q.reject);
           } else {
             nextLoop();
@@ -322,9 +327,13 @@ module.exports = (function() {
         setTimeout(function () {
           if (installation) {
             channels.forEach(function(item) {
+              subscriptions = subscriptions.filter(function(subscription) {
+                return subscription !== item;
+              });
               installation.remove("channels", item);
             });
 
+            window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
             installation.save().then(q.resolve, q.reject);
           } else {
             nextLoop();
