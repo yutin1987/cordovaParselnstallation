@@ -4,11 +4,12 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.PackageManager;
+
+import java.util.TimeZone;
 
 public class ParseInstallation extends CordovaPlugin {
   @Override
@@ -30,9 +31,9 @@ public class ParseInstallation extends CordovaPlugin {
         callbackContext.success(packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), 0).versionName);
       return true;
       }
-      if (action.equals("getVersionCode")) {
-        PackageManager packageManager = this.cordova.getActivity().getPackageManager();
-        callbackContext.success(packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), 0).versionCode);
+      if (action.equals("getTimeZone")) {
+        TimeZone tz = TimeZone.getDefault();
+        callbackContext.success(tz.getID());
       return true;
       }
       return false;

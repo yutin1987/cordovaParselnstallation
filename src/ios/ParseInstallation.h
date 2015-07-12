@@ -4,10 +4,10 @@
 
 - (void)getAppName:(CDVInvokedUrlCommand*)command;
 
+- (void)getTimeZone:(CDVInvokedUrlCommand*)command;
+
 - (void)getPackageName:(CDVInvokedUrlCommand*)command;
 
 - (void)getVersionNumber:(CDVInvokedUrlCommand*)command;
-
-- (void)getVersionCode:(CDVInvokedUrlCommand*)command;
 
 @end

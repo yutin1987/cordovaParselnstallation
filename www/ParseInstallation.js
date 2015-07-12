@@ -112,6 +112,12 @@ module.exports = (function() {
     return toReturn(q);
   }
 
+  function getTimeZone() {
+    var q = deferred();
+    exec(q.resolve, q.reject, 'ParseInstallation', 'getTimeZone', []);
+    return toReturn(q);
+  }
+
   function saveInstallation(token, config) {
     var q = deferred();
     var Installation = Parse.Object.extend("_Installation");
@@ -138,7 +144,6 @@ module.exports = (function() {
     installation.set('installationId', installationId);
     installation.set('deviceToken', token);
     installation.set('parseVersion', Parse.VERSION);
-    // installation.set('timeZone', token);
 
     setTimeout(function() {
       q.resolve(installation);
@@ -161,6 +166,12 @@ module.exports = (function() {
         return getPackageName()
           .then(function(packageName) {
             return installation.set('appIdentifier', packageName);
+          });
+      })
+      .then(function(installation) {
+        return getTimeZone()
+          .then(function(timeZone) {
+            return installation.set('timeZone', timeZone);
           });
       })
       .then(function(installation) {
