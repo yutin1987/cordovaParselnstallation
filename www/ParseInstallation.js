@@ -176,6 +176,7 @@ module.exports = (function() {
 
   var pushToken;
   var onNotification;
+  var installation;
   return {
     listenNotification: function (notification) {
       setTimeout(function() {
@@ -224,7 +225,10 @@ module.exports = (function() {
           setTimeout(function () {
             if (pushToken) {
               saveInstallation(pushToken)
-                .then(q.resolve, q.reject);
+                .then(function(reply) {
+                  installation = reply;
+                  q.resolve(reply);
+                }, q.reject);
             } else {
               nextLoop();
             }
@@ -232,6 +236,70 @@ module.exports = (function() {
         };
         nextLoop();
       }, q.reject, config);
+
+      return toReturn(q);
+    },
+    getSubscriptions: function() {
+      var q = deferred();
+
+      var nextLoop = function() {
+        setTimeout(function () {
+          if (installation) {
+            installation.get('channels').then(q.resolve, q.reject);
+          } else {
+            nextLoop();
+          }
+        });
+      };
+      nextLoop();
+
+      return toReturn(q);
+    },
+    subscribe: function(channels) {
+      var q = deferred();
+
+      if (typeof channels === 'string') {
+        channels = [channels];
+      }
+      
+      var nextLoop = function() {
+        setTimeout(function () {
+          if (installation) {
+            channels.forEach(function(item) {
+              installation.addUnique("channels", item);
+            });
+
+            installation.save().then(q.resolve, q.reject);
+          } else {
+            nextLoop();
+          }
+        });
+      };
+      nextLoop();
+
+      return toReturn(q);
+    },
+    unsubscribe: function(channels) {
+      var q = deferred();
+
+      if (typeof channels === 'string') {
+        channels = [channels];
+      }
+
+      var nextLoop = function() {
+        setTimeout(function () {
+          if (installation) {
+            channels.forEach(function(item) {
+              installation.remove("channels", item);
+            });
+
+            installation.save().then(q.resolve, q.reject);
+          } else {
+            nextLoop();
+          }
+        });
+      };
+      nextLoop();
 
       return toReturn(q);
     }
