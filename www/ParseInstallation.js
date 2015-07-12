@@ -112,13 +112,7 @@ module.exports = (function() {
     return toReturn(q);
   }
 
-  function getVersionCode() {
-    var q = deferred();
-    exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionCode', []);
-    return toReturn(q);
-  }
-
-  function saveInstallation(token) {
+  function saveInstallation(token, config) {
     var q = deferred();
     var Installation = Parse.Object.extend("_Installation");
     var installation = new Installation();
@@ -137,14 +131,14 @@ module.exports = (function() {
     installation.set('deviceType', platform);
     if (platform === 'android') {
       installation.set('pushType', 'gcm');
+      if (config.senderID !== 1076345567071) {
+        installation.set('GCMSenderId', config.senderID);
+      }
     }
     installation.set('installationId', installationId);
     installation.set('deviceToken', token);
-    // installation.set('parseVersion', token);
+    installation.set('parseVersion', Parse.VERSION);
     // installation.set('timeZone', token);
-
-    // getVersionCode().then(function(packageName) {
-    // });
 
     setTimeout(function() {
       q.resolve(installation);
@@ -204,6 +198,9 @@ module.exports = (function() {
       var platform = device.platform.toLowerCase();
       if (platform === 'android') {
         config = config.android;
+        if (!config.senderID) {
+          config.senderID = 1076345567071;
+        }
       } else if (platform === 'ios') {
         config = config.ios;
       } else {
@@ -215,8 +212,7 @@ module.exports = (function() {
       }
 
       var q = deferred();
-
-      window.plugins.pushNotification.register(function (token) {
+      exec(function (token) {
         if (token != 'OK') {
           pushToken = token;
         }
@@ -224,7 +220,7 @@ module.exports = (function() {
         var nextLoop = function() {
           setTimeout(function () {
             if (pushToken) {
-              saveInstallation(pushToken)
+              saveInstallation(pushToken, config)
                 .then(function(reply) {
                   installation = reply;
                   q.resolve(reply);
@@ -235,7 +231,9 @@ module.exports = (function() {
           });
         };
         nextLoop();
-      }, q.reject, config);
+      }, function(error) {
+        alert(JSON.stringify(error));
+      }, "PushPlugin", "register", [config]);
 
       return toReturn(q);
     },

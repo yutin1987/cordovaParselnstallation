@@ -1,4 +1,4 @@
-package org.apache.cordova.plugin;
+package org.apache.cordova.plugin.parse;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -25,9 +25,9 @@ public class ParseInstallation extends CordovaPlugin {
         callbackContext.success(this.cordova.getActivity().getPackageName());
         return true;
       }
-      if (action.equals("getVersionNumber")) {= this.cordova.getActivity().getPackageManager();
-        callbackContext.success(packag
-        PackageManager packageManager eManager.getPackageInfo(this.cordova.getActivity().getPackageName(), 0).versionName);
+      if (action.equals("getVersionNumber")) {
+        PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+        callbackContext.success(packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), 0).versionName);
       return true;
       }
       if (action.equals("getVersionCode")) {

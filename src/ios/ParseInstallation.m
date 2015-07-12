@@ -3,11 +3,20 @@
 
 @implementation ParseInstallation
 
-- (void)getAppName : (CDVInvokedUrlCommand *)command
+- (void)getAppName:(CDVInvokedUrlCommand *)command
 {
     NSString * callbackId = command.callbackId;
     NSString * version =[[[NSBundle mainBundle]infoDictionary]objectForKey :@"CFBundleDisplayName"];
     CDVPluginResult * pluginResult =[CDVPluginResult resultWithStatus : CDVCommandStatus_OK messageAsString : version];
+    [self.commandDelegate sendPluginResult : pluginResult callbackId : callbackId];
+}
+
+- (void)getTimeZone:(CDVInvokedUrlCommand*)command
+{
+    NSString * callbackId = command.callbackId;
+    NSTimeZone *timeZone = [NSTimeZone localTimeZone];
+    NSString *tzName = [timeZone name];
+    CDVPluginResult * pluginResult =[CDVPluginResult resultWithStatus : CDVCommandStatus_OK messageAsString : tzName];
     [self.commandDelegate sendPluginResult : pluginResult callbackId : callbackId];
 }
 
@@ -32,14 +41,6 @@
       }
     }
 
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:version];
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
-}
-
-- (void)getVersionCode:(CDVInvokedUrlCommand*)command
-{
-    NSString* callbackId = command.callbackId;
-    NSString* version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:version];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
 }
