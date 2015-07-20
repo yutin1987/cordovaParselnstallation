@@ -4,12 +4,6 @@ Parse Installation of your ngCordova.
 
 ## Installation
 
-Step1. install [pushNotifications](http://ngcordova.com/docs/plugins/pushNotifications/):
-
-    cordova plugin add https://github.com/phonegap-build/PushPlugin.git
-
-Step2. install ngCordovaParse:
-
     cordova plugin add https://github.com/yutin1987/cordovaParselnstallation.git
 
 ### Manually in iOS

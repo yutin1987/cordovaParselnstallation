@@ -225,6 +225,9 @@ module.exports = (function() {
         }
       });
     },
+    getCurrentInstallation: function() {
+      return getCurrentInstallation();
+    },
     initialize: function (appId, appKey, config) {
 
       Parse.initialize(appId, appKey);
@@ -326,12 +329,19 @@ module.exports = (function() {
       var nextLoop = function() {
         setTimeout(function () {
           if (installation) {
-            channels.forEach(function(item) {
+            if (channels instanceof RegExp) {
               subscriptions = subscriptions.filter(function(subscription) {
-                return subscription !== item;
+                return !channels.test(subscription);
               });
-              installation.remove("channels", item);
-            });
+            } else {
+              channels.forEach(function(item) {
+                subscriptions = subscriptions.filter(function(subscription) {
+                  return subscription !== item;
+                });
+              });
+            }
+
+            installation.set("channels", subscriptions);
 
             window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
             installation.save().then(q.resolve, q.reject);
