@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.plugin.parse.ParseInstallation"
-    version="0.1.9">
+    version="0.1.10">
 
     <name>cordovaParse</name>
     <description>
@@ -90,21 +90,5 @@
 
         <header-file src="src/ios/AppDelegate+notification.h" />
         <source-file src="src/ios/AppDelegate+notification.m" />
-    </platform>
-
-    <!-- browser -->
-    <platform name="browser">
-        <config-file target="config.xml" parent="/*">
-            <feature name="ParseInstallation">
-                <param name="browser-package" value="ParseInstallation" />
-            </feature>
-        </config-file>
-
-        <js-module src="src/browser/ParseInstallation.js" name="ParseInstallation">
-            <runs />
-        </js-module>
-        <js-module src="www/parse-1.4.2.min.js" name="Parse">
-            <runs />
-        </js-module>
     </platform>
 </plugin>
