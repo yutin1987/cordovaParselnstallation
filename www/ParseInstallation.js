@@ -1,111 +1,121 @@
 var exec = require('cordova/exec');
 
 module.exports = (function() {
-  var deferred;
-  var toReturn;
-  if (window.jQuery) {
-    deferred = jQuery.Deferred;
-    toReturn = function(def) {
-      return def;
-    };
-  } else if (window.angular) {
-    injector = angular.injector(["ng"]);
-    $q = injector.get("$q");
-    deferred = $q.defer;
-    toReturn = function(def) {
-      return def.promise;
-    };
-  } else {
-    return console.error('AppVersion either needs a success callback, or jQuery/AngularJS defined for using promises');
-  }
+  var Installation = Parse.Object.extend("_Installation");
+  var installation = new Installation();
+  var pushToken;
+  var onNotification;
 
   var subscriptions = window.localStorage.getItem('subscriptions') || '[]';
   subscriptions = JSON.parse(subscriptions);
 
   function getAppName() {
-    var q = deferred();
-    exec(q.resolve, q.reject, 'ParseInstallation', 'getAppName', []);
-    return toReturn(q);
+    var promise = new Parse.Promise();
+    exec(promise.resolve.bind(promise), promise.reject.bind(promise), 'ParseInstallation', 'getAppName', []);
+    return promise;
   }
   
   function getPackageName() {
-    var q = deferred();
-    exec(q.resolve, q.reject, 'ParseInstallation', 'getPackageName', []);
-    return toReturn(q);
+    var promise = new Parse.Promise();
+    exec(promise.resolve.bind(promise), promise.reject.bind(promise), 'ParseInstallation', 'getPackageName', []);
+    return promise;
   }
 
   function getVersionNumber() {
-    var q = deferred();
-    exec(q.resolve, q.reject, 'ParseInstallation', 'getVersionNumber', []);
-    return toReturn(q);
+    var promise = new Parse.Promise();
+    exec(promise.resolve.bind(promise), promise.reject.bind(promise), 'ParseInstallation', 'getVersionNumber', []);
+    return promise;
   }
 
   function getTimeZone() {
-    var q = deferred();
-    exec(q.resolve, q.reject, 'ParseInstallation', 'getTimeZone', []);
-    return toReturn(q);
+    var promise = new Parse.Promise();
+    exec(promise.resolve.bind(promise), promise.reject.bind(promise), 'ParseInstallation', 'getTimeZone', []);
+    return promise;
   }
 
-  function saveInstallation(token, config) {
-    var Installation = Parse.Object.extend("_Installation");
+  function getToken(config) {
+    var promise = new Parse.Promise();
+    if (pushToken) {
+      setTimeout(function() {
+        promise.resolve(pushToken);
+      });
+    } else {
+      exec(function (token) {
+        console.log(token);
+        if (token != 'OK') {
+          pushToken = token;
+        }
 
-    return Parse._getInstallationId()
-      .then(function(iid) {
-        var installation = new Installation();
+        // watting listenNotification if android
+        var timeout = new Date().getTime();
+        var nextLoop = function() {
+          setTimeout(function () {
+            if (pushToken || new Date().getTime() > timeout + 5 * 1000) {
+              promise.resolve(pushToken);
+            } else {
+              nextLoop();
+            }
+          });
+        };
+        nextLoop();
+      }, function() {
+        console.log('error: failed to get token');
+        promise.resolve();
+      }, "PushPlugin", "register", [config]);
+    }
+    return promise;
+  }
+
+  function saveInstallation(config) {
+    return Parse.Promise.when([
+        Parse._getInstallationId(),
+        getAppName(),
+        getPackageName(),
+        getVersionNumber(),
+        getTimeZone(),
+        getToken(config)
+      ])
+      .then(function(
+        iid,
+        appName,
+        packageName,
+        versionNumber,
+        timeZone,
+        token
+      ) {
+        installation.set('installationId', iid);
+        installation.set('appName', appName);
+        installation.set('appIdentifier', packageName);
+        installation.set('appVersion', versionNumber);
+        installation.set('timeZone', timeZone);
+        installation.set('deviceToken', token);
 
         var platform = device.platform.toLowerCase();
         installation.set('deviceType', platform);
-
-        installation.set('installationId', iid);
-
-        return installation;
-      })
-      .then(function(installation) {
-        if (device.platform.toLowerCase() === 'android') {
+        if (platform === 'android') {
           installation.set('pushType', 'gcm');
           if (config.senderID !== 1076345567071) {
             installation.set('GCMSenderId', config.senderID);
           }
         }
-        installation.set('deviceToken', token);
+        
         installation.set('parseVersion', Parse.VERSION);
         installation.set('channels', subscriptions);
-        return installation;
-      })
-      .then(function(installation) {
-        return getVersionNumber()
-          .then(function(versionNumber) {
-            return installation.set('appVersion', versionNumber);
-          });
-      })
-      .then(function(installation) {
-        return getAppName()
-          .then(function(appName) {
-            return installation.set('appName', appName);
-          });
-      })
-      .then(function(installation) {
-        return getPackageName()
-          .then(function(packageName) {
-            return installation.set('appIdentifier', packageName);
-          });
-      })
-      .then(function(installation) {
-        return getTimeZone()
-          .then(function(timeZone) {
-            return installation.set('timeZone', timeZone);
-          });
-      })
-      .then(function(installation) {
-        console.log('save installation: ' + installation.id + ', ' + installation.get('installationId'));
-        
+
         return installation.save();
+      })
+      .then(function(reply) {
+        installation.id = reply.id;
+        console.log('save installation: ' + reply.id + ', ' + reply.get('installationId'));
+        
+        return installation;
+      }, function(err) {
+        console.log('error installation: ', err.message);
+
+        return;
       });
   }
 
-  var pushToken;
-  var onNotification;
-  var installation;
   return {
     listenNotification: function (notification) {
       setTimeout(function() {
@@ -123,15 +133,18 @@ module.exports = (function() {
       });
     },
     getCurrentInstallation: function() {
-      return getCurrentInstallation();
+      return Parse.Promise.as(installation);
     },
     initialize: function (appId, appKey, config) {
+      var promise = new Parse.Promise();
 
       Parse.initialize(appId, appKey);
 
       if (config.onNotification) {
         onNotification = config.onNotification;
       }
+      
+      config.ecb = 'ParseInstallation.listenNotification';
 
       var platform = device.platform.toLowerCase();
       if (platform === 'android') {
@@ -142,114 +155,57 @@ module.exports = (function() {
       } else if (platform === 'ios') {
         config = config.ios;
       } else {
-        return q.reject('Not suppert platform');
+        return promise.reject('Not suppert platform');
       }
 
-      if (config !== undefined && config.ecb === undefined) {
-        config.ecb = 'ParseInstallation.listenNotification';
-      }
+      saveInstallation(config).then(promise.resolve, promise.reject);
 
-      var q = deferred();
-      exec(function (token) {
-        if (token != 'OK') {
-          pushToken = token;
-        }
-
-        var nextLoop = function() {
-          setTimeout(function () {
-            if (pushToken) {
-              saveInstallation(pushToken, config)
-                .then(function(reply) {
-                  installation = reply;
-                  q.resolve(reply);
-                }, q.reject);
-            } else {
-              nextLoop();
-            }
-          });
-        };
-        nextLoop();
-      }, function(error) {
-        alert(JSON.stringify(error));
-      }, "PushPlugin", "register", [config]);
-
-      return toReturn(q);
+      return promise;
     },
     getSubscriptions: function() {
-      var q = deferred();
-
-      setTimeout(function() {
-        q.resolve(subscriptions);
-      });
-
-      return toReturn(q);
+      return Parse.Promise.as(subscriptions);
     },
     subscribe: function(channels) {
-      var q = deferred();
-
       if (typeof channels === 'string') {
         channels = [channels];
       }
       
-      var nextLoop = function() {
-        setTimeout(function () {
-          if (installation) {
-            channels.forEach(function(item) {
-              for(var i in subscriptions) {
-                if (subscriptions[i] === item) {
-                  return;
-                }
-              }
-              
-              subscriptions.push(item);
-              installation.addUnique("channels", item);
-            });
+      channels.forEach(function(item) {
+        installation.addUnique("channels", item);
+      });
+      
+      subscriptions = Installation.get('channels');
 
-            window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-            installation.save().then(q.resolve, q.reject);
-          } else {
-            nextLoop();
-          }
-        });
-      };
-      nextLoop();
+      window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
 
-      return toReturn(q);
+      if (installation.id) {
+        installation.save();
+      }
     },
     unsubscribe: function(channels) {
-      var q = deferred();
-
       if (typeof channels === 'string') {
         channels = [channels];
       }
 
-      var nextLoop = function() {
-        setTimeout(function () {
-          if (installation) {
-            if (channels instanceof RegExp) {
-              subscriptions = subscriptions.filter(function(subscription) {
-                return !channels.test(subscription);
-              });
-            } else {
-              channels.forEach(function(item) {
-                subscriptions = subscriptions.filter(function(subscription) {
-                  return subscription !== item;
-                });
-              });
-            }
-
-            installation.set("channels", subscriptions);
-
-            window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
-            installation.save().then(q.resolve, q.reject);
-          } else {
-            nextLoop();
-          }
+      if (channels instanceof RegExp) {
+        subscriptions = subscriptions.filter(function(subscription) {
+          return !channels.test(subscription);
         });
-      };
-      nextLoop();
+      } else {
+        channels.forEach(function(item) {
+          subscriptions = subscriptions.filter(function(subscription) {
+            return subscription !== item;
+          });
+        });
+      }
 
-      return toReturn(q);
+      installation.set("channels", subscriptions);
+
+      window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
+
+      if (installation.id) {
+        installation.save();
+      }
     }
   };
 }).call(this);
