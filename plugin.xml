@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.plugin.parse.ParseInstallation"
-    version="0.1.10">
+    version="0.1.12">
 
     <name>cordovaParse</name>
     <description>
@@ -18,7 +18,7 @@
         <engine name="cordova" version=">=3.0.0" />
     </engines>
 
-    <js-module src="www/parse-1.4.2.min.js" name="Parse">
+    <js-module src="www/parse-1.5.0.min.js" name="Parse">
        <runs />
     </js-module>
 

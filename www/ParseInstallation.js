@@ -46,30 +46,20 @@ module.exports = (function() {
     return toReturn(q);
   }
 
-  function createInstallation() {
-    // var installationId = window.localStorage.getItem('parseInstallationId');
-    // installation.set('installationId', installationId);
-    // window.localStorage.setItem('parseInstallationId', installationId);
-  }
-
-  function getCurrentInstallation() {
-    var q = deferred();
-
-    var Installation = Parse.Object.extend("_Installation");
-    var installation = new Installation();
-
-    var platform = device.platform.toLowerCase();
-    installation.set('deviceType', platform);
-    installation.save().then(q.resolve, q.reject);
-
-    return toReturn(q).then(function(installation) {
-      console.log('save installation: ' + installation.id + ', ' + installation.get('installationId'));
-      return installation;
-    });
-  }
-
   function saveInstallation(token, config) {
-    return getCurrentInstallation()
+    var Installation = Parse.Object.extend("_Installation");
+
+    return Parse._getInstallationId()
+      .then(function(iid) {
+        var installation = new Installation();
+
+        var platform = device.platform.toLowerCase();
+        installation.set('deviceType', platform);
+
+        installation.set('installationId', iid);
+
+        return installation;
+      })
       .then(function(installation) {
         if (device.platform.toLowerCase() === 'android') {
           installation.set('pushType', 'gcm');
@@ -107,6 +97,8 @@ module.exports = (function() {
           });
       })
       .then(function(installation) {
+        console.log('save installation: ' + installation.id + ', ' + installation.get('installationId'));
+        
         return installation.save();
       });
   }
