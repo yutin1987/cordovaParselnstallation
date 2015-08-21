@@ -174,7 +174,7 @@ module.exports = (function() {
         installation.addUnique("channels", item);
       });
       
-      subscriptions = Installation.get('channels');
+      subscriptions = installation.get('channels');
 
       window.localStorage.setItem('subscriptions', JSON.stringify(subscriptions));
 
