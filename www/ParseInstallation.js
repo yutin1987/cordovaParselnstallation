@@ -41,7 +41,6 @@ module.exports = (function() {
       });
     } else {
       exec(function (token) {
-        console.log(token);
         if (token != 'OK') {
           pushToken = token;
         }
@@ -147,16 +146,27 @@ module.exports = (function() {
       config.ecb = 'ParseInstallation.listenNotification';
 
       var platform = device.platform.toLowerCase();
+      var assign;
       if (platform === 'android') {
-        config = config.android;
-        if (!config.senderID) {
+        assign = config.android;
+        if (!config.senderID && !assign.senderID) {
           config.senderID = 1076345567071;
         }
       } else if (platform === 'ios') {
-        config = config.ios;
+        assign = config.ios;
       } else {
         return promise.reject('Not suppert platform');
       }
+
+      for (var key in assign) {
+        if (assign.hasOwnProperty(key)) {
+          config[key] = assign[key];
+        }
+      }
+
+      config.badge = config.badge === false ? false : true;
+      config.sound = config.sound === false ? false : true;
+      config.alert = config.alert === false ? false : true;
 
       saveInstallation(config).then(promise.resolve, promise.reject);
 
