@@ -134,10 +134,12 @@ module.exports = (function() {
     getCurrentInstallation: function() {
       return Parse.Promise.as(installation);
     },
-    initialize: function (appId, appKey, config) {
+    initialize: function (config) {
+      if (!Parse) {
+        throw new Error('Parse is not defined');
+      }
+      
       var promise = new Parse.Promise();
-
-      Parse.initialize(appId, appKey);
 
       if (config.onNotification) {
         onNotification = config.onNotification;

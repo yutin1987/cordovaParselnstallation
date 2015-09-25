@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.plugin.parse.ParseInstallation"
-    version="0.2.7">
+    version="0.3.0">
 
     <name>cordovaParse</name>
     <description>
@@ -11,16 +11,8 @@
     <license>MIT</license>
 
     <engines>
-        <!--
-            Cordova 2.8.0 is all I have tested on - it should work fine with earlier versions.
-            Please modify the below line, test, and submit a PR if it works for you.
-        -->
         <engine name="cordova" version=">=3.0.0" />
     </engines>
-
-    <js-module src="www/parse-1.5.0.min.js" name="Parse">
-       <runs />
-    </js-module>
 
     <js-module src="www/ParseInstallation.js" name="ParseInstallation">
        <clobbers target="ParseInstallation" />
