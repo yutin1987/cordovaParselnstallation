@@ -108,10 +108,6 @@ module.exports = (function() {
         console.log('save installation: ' + reply.id + ', ' + reply.get('installationId'));
         
         return installation;
-      }, function(err) {
-        console.log('error installation: ', err.message);
-
-        return;
       });
   }
 
@@ -138,41 +134,42 @@ module.exports = (function() {
       if (!Parse) {
         throw new Error('Parse is not defined');
       }
-      
-      var promise = new Parse.Promise();
 
-      if (config.onNotification) {
-        onNotification = config.onNotification;
-      }
-      
-      config.ecb = 'ParseInstallation.listenNotification';
+      return Parse
+        .Promise
+        .as(config)
+        .then(function(config) {
+          if (config.onNotification) {
+            onNotification = config.onNotification;
+          }
+          
+          config.ecb = 'ParseInstallation.listenNotification';
 
-      var platform = device.platform.toLowerCase();
-      var assign;
-      if (platform === 'android') {
-        assign = config.android;
-        if (!config.senderID && !assign.senderID) {
-          config.senderID = 1076345567071;
-        }
-      } else if (platform === 'ios') {
-        assign = config.ios;
-      } else {
-        return promise.reject('Not suppert platform');
-      }
+          var platform = device.platform.toLowerCase();
+          var assign;
+          if (platform === 'android') {
+            assign = config.android;
+            if (!config.senderID && !assign.senderID) {
+              config.senderID = 1076345567071;
+            }
+          } else if (platform === 'ios') {
+            assign = config.ios;
+          } else {
+            return Parse.Promise.error('Not suppert platform');
+          }
 
-      for (var key in assign) {
-        if (assign.hasOwnProperty(key)) {
-          config[key] = assign[key];
-        }
-      }
+          for (var key in assign) {
+            if (assign.hasOwnProperty(key)) {
+              config[key] = assign[key];
+            }
+          }
 
-      config.badge = config.badge === false ? false : true;
-      config.sound = config.sound === false ? false : true;
-      config.alert = config.alert === false ? false : true;
+          config.badge = config.badge === false ? false : true;
+          config.sound = config.sound === false ? false : true;
+          config.alert = config.alert === false ? false : true;
 
-      saveInstallation(config).then(promise.resolve, promise.reject);
-
-      return promise;
+          return saveInstallation(config);
+        });
     },
     getSubscriptions: function() {
       return Parse.Promise.as(subscriptions);
