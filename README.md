@@ -17,21 +17,24 @@ TODO: Write these instructions
 ### Sample Code
 
 ```
+<script src="js/parse.js"></script>
+
+Parse.initialize(
+  'AppId',
+  'AppKey'
+);
+  
 $ionicPlatform.ready(function() {
   ParseInstallation
     .initialize(
-      'Application ID',
-      'JavaScript Key',
       {
-        android: {'senderID': 'XXXXXXXXXXXX'},
-        ios: {},
-        onNotification: function(notification) {
-          $rootScope.$broadcast('notificationReceived', notification);
+        senderID: 'XXXXXXX',
+        onNotification: function(data) {
         }
       }
     )
     .then(function(installation) {
-      alert('New object created with objectId: ' + installation.id);
+      // alert('New object created with objectId: ' + installation.id);
     });
 });
 ```
