@@ -74,14 +74,14 @@ module.exports = (function() {
         getTimeZone(),
         getToken(config)
       ])
-      .then(function(
+      .then(function([
         iid,
         appName,
         packageName,
         versionNumber,
         timeZone,
         token
-      ) {
+      ]) {
         installation.set('installationId', iid);
         installation.set('appName', appName);
         installation.set('appIdentifier', packageName);
@@ -98,7 +98,7 @@ module.exports = (function() {
           }
         }
         
-        installation.set('parseVersion', Parse.VERSION);
+        installation.set('parseVersion', '1.9.2');
         installation.set('channels', subscriptions);
 
         return installation.save();
